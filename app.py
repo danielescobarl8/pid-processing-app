@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import io
 import random
+from datetime import datetime
 
 # Motivational messages
 motivational_phrases = [
@@ -55,6 +56,8 @@ def load_data(file):
 # Use session state to store the generated file for multiple downloads
 if "approval_file_content" not in st.session_state:
     st.session_state.approval_file_content = None
+if "approval_file_name" not in st.session_state:
+    st.session_state.approval_file_name = None
 
 if st.button("Process File"):
     if uploaded_file and pids_input:
@@ -93,19 +96,23 @@ if st.button("Process File"):
                 df_final.rename(columns={'PID': 'SKU', 'MPL_PRODUCT_ID': 'Base Product ID'}, inplace=True)
                 df_final = df_final[['SKU', 'Base Product ID', 'CATALOG_VERSION', 'APPROVAL_STATUS']]
 
-                # Generate output file
+                # Generate output file content
                 output = io.StringIO()
                 df_final.to_csv(output, sep="|", index=False)
                 st.session_state.approval_file_content = output.getvalue()  # Store file for multiple downloads
+
+                # Generate timestamp for filename
+                timestamp = datetime.now().strftime("%d%m%Y%H%M")
+                st.session_state.approval_file_name = f"SBC_HYBRIS_SIZEVARIANT_APPROVAL_{timestamp}.txt"
 
                 # Success message
                 st.success("✅ File successfully generated! Download it below.")
 
 # Show download button if a file is available
-if st.session_state.approval_file_content:
+if st.session_state.approval_file_content and st.session_state.approval_file_name:
     st.download_button(
         label="Download Processed File",
         data=st.session_state.approval_file_content,
-        file_name=f"Processed_PIDs_{selected_country}.txt",
+        file_name=st.session_state.approval_file_name,
         mime="text/plain"
     )

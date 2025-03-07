@@ -5,6 +5,11 @@ import io
 # Streamlit UI
 st.title("PID Processing Tool")
 
+# Dropdown for country selection
+st.subheader("Select Country")
+country_options = ["Brazil", "Chile", "Mexico", "Colombia", "Argentina"]
+selected_country = st.selectbox("Choose a country:", country_options)
+
 # File Upload
 st.subheader("Upload Master Data File (CSV)")
 uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
@@ -16,7 +21,6 @@ pids_input = st.text_area("Paste PIDs here", placeholder="91825-3304\n98122-3105
 # Process input to handle both comma-separated and line-separated formats
 def process_pids(pids_text):
     if pids_text:
-        # Replace newlines with commas, then split into a list
         return [pid.strip() for pid in pids_text.replace("\n", ",").split(",") if pid.strip()]
     return []
 
@@ -39,7 +43,7 @@ if st.button("Process File"):
         df_final = df_filtered[df_filtered['COLOR_ID'].isin(color_ids)].copy()
 
         # Add required columns
-        df_final['CATALOG_VERSION'] = "SBCColombiaProductCatalog"
+        df_final['CATALOG_VERSION'] = f"SBC{selected_country}ProductCatalog"  # Dynamically replace COUNTRY
         df_final['APPROVAL_STATUS'] = "approved"
 
         # Rename columns for output
@@ -55,8 +59,9 @@ if st.button("Process File"):
         st.download_button(
             label="Download Processed File",
             data=output_content,
-            file_name="Processed_PIDs.txt",
+            file_name=f"Processed_PIDs_{selected_country}.txt",
             mime="text/plain"
         )
     else:
         st.error("Please upload a file and enter PIDs.")
+
